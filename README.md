@@ -3,7 +3,7 @@ Employee Task Management System
 A FastAPI + JWT + Frontend UI Project
 
 This project is a complete Employee Task Management System built with a FastAPI backend and a HTML/CSS/JS frontend.
-It supports full JWT authentication, real CRUD operations, and a clean, animated flip-card login/signup interface.
+It supports full JWT authentication, real CRUD operations.
 
 🚀 Features
 🔐 Authentication
@@ -65,8 +65,3 @@ Frontend
 
 HTML5
 
-CSS3
-
-Responsive Animated Flip Card
-
-Vanilla JavaScript (Fetch API)
