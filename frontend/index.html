@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Task UI — Login / Sign up</title>
+
+  <style>
+    :root{
+      --input-focus: #2d8cf0;
+      --font-color: #ffffff;
+      --font-color-sub: #cccccc;
+      --bg-color: #0b0b0b;
+      --accent: rgba(255,255,255,0.12);
+      --card-bg: #1f1f1f;
+      --muted: #8b8b8b;
+      --surface-1: #171717;
+      --surface-2: #121212;
+      --elevation: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg-color);
+      color:var(--font-color);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+
+    .wrapper{ width:100%; display:flex; justify-content:center; }
+
+    .container{
+      display:flex;
+      gap:40px;
+      align-items:flex-start;
+      max-width:1100px;
+      width:100%;
+      justify-content:center;
+    }
+
+    /* Card switch area (we removed slider/labels) */
+    .card-switch {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+      min-width:320px;
+    }
+
+    /* FLIP CARD */
+    .flip-card__inner {
+      width: 340px;
+      height: 380px;
+      transition: transform 0.8s cubic-bezier(.2,.9,.2,1);
+      transform-style: preserve-3d;
+      position: relative;
+      margin-top: 6px;
+      perspective: 1200px;
+    }
+
+    /* when JS adds this class the card flips */
+    .flip-card__inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card__front, .flip-card__back {
+      width:100%;
+      height:100%;
+      padding: 28px;
+      background: var(--card-bg);
+      box-shadow: var(--elevation);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      position: absolute;
+      backface-visibility: hidden;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:18px;
+    }
+
+    .flip-card__back{
+      transform: rotateY(180deg);
+    }
+
+    /* titles & forms */
+    .title{
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--font-color);
+      text-align:center;
+      margin:0;
+    }
+
+    .flip-card__form {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
+      width:100%;
+    }
+
+    /* inputs */
+    .flip-card__input{
+      width: 280px;
+      height: 46px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--surface-2);
+      color: var(--font-color);
+      font-size: 15px;
+      outline:none;
+    }
+    .flip-card__input::placeholder{ color:var(--muted); }
+    .flip-card__input:focus{ border-color:var(--input-focus); box-shadow: 0 6px 18px rgba(45,140,240,0.08); }
+
+    /* buttons */
+    .flip-card__btn{
+      width: 160px;
+      height: 46px;
+      border-radius: 10px;
+      border: 1px solid var(--accent);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+      color: var(--font-color);
+      font-weight:700;
+      font-size:15px;
+      cursor:pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.6);
+    }
+
+    .flip-card__switch {
+      background: none;
+      border: none;
+      color: var(--font-color-sub);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 6px 8px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 880px){
+      .container{ flex-direction:column; align-items:center; gap:18px; padding:16px; }
+      .flip-card__inner{ transform-origin: 50% 50%; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <div class="container">
+      <div class="card-switch" aria-live="polite">
+
+        <!-- FLIP CARD: no checkbox, labels or slider -->
+        <div id="flipInner" class="flip-card__inner" role="region" aria-label="Authentication card">
+
+          <!-- LOGIN PAGE -->
+          <div class="flip-card__front" aria-hidden="false">
+            <div class="title">Log in</div>
+
+            <form id="loginForm" class="flip-card__form" onsubmit="event.preventDefault(); loginUser();">
+              <input class="flip-card__input"
+                     id="login-username"
+                     placeholder="Username"
+                     type="text"
+                     autocomplete="username" />
+
+              <input class="flip-card__input"
+                     id="login-password"
+                     placeholder="Password"
+                     type="password"
+                     autocomplete="current-password" />
+
+              <button type="submit" class="flip-card__btn">Let's go!</button>
+            </form>
+
+            <!-- small link to flip -->
+            <button class="flip-card__switch" onclick="flipToSignup()" aria-label="Switch to Sign up">Don't have an account? Sign up</button>
+          </div>
+
+          <!-- SIGN UP PAGE -->
+          <div class="flip-card__back" aria-hidden="true">
+            <div class="title">Sign up</div>
+
+            <form id="signupForm" class="flip-card__form" onsubmit="event.preventDefault(); signupUser();">
+              <input class="flip-card__input"
+                     id="signup-username"
+                     placeholder="Username"
+                     type="text"
+                     autocomplete="username" />
+
+              <input class="flip-card__input"
+                     id="signup-password"
+                     placeholder="Password"
+                     type="password"
+                     autocomplete="new-password" />
+
+              <button type="submit" class="flip-card__btn">Confirm!</button>
+            </form>
+
+            <!-- small link to flip back -->
+            <button class="flip-card__switch" onclick="flipToLogin()" aria-label="Switch to Log in">Already have an account? Log in</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://127.0.0.1:8000";
+  const flipInner = document.getElementById("flipInner");
+
+  function flipToSignup(){
+    flipInner.classList.add("is-flipped");
+  }
+
+  function flipToLogin(){
+    flipInner.classList.remove("is-flipped");
+  }
+
+  async function loginUser(){
+    const username = document.getElementById("login-username").value.trim();
+    const password = document.getElementById("login-password").value;
+    if(!username || !password) { alert("Please enter username & password"); return; }
+
+    const form = new URLSearchParams();
+    form.append("username", username);
+    form.append("password", password);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form
+      });
+
+      if (!response.ok) {
+        const txt = await response.text().catch(()=>"");
+        alert("Invalid Login: " + (txt || response.status));
+        return;
+      }
+
+      const data = await response.json();
+      localStorage.setItem("token", data.access_token);
+      alert("Login Successful!");
+      window.location.href = "home.html";
+    } catch (err) {
+      console.error(err);
+      alert("Network error. Is the API running?");
+    }
+  }
+
+  async function signupUser(){
+    const username = document.getElementById("signup-username").value.trim();
+    const password = document.getElementById("signup-password").value;
+    if(!username || !password) { alert("Enter username & password"); return; }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!response.ok) {
+        const txt = await response.text().catch(()=>"");
+        alert("Signup Failed: " + (txt || response.status));
+        return;
+      }
+
+      alert("Signup Success! Please log in.");
+      flipToLogin(); // automatically flip back to login after signup
+    } catch (err) {
+      console.error(err);
+      alert("Network error. Is the API running?");
+    }
+  }
+</script>
+
+</body>
+</html>

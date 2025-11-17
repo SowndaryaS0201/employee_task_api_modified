@@ -1,0 +1,289 @@
+/* Adjusted Uiverse layout - centered flip card + aligned labels (dark theme) */
+
+/* ---------- Theme variables ---------- */
+:root{
+  --input-focus: #2d8cf0;
+  --font-color: #ffffff;
+  --font-color-sub: #cccccc;
+  --bg-color: #111111;
+  --main-color: #ffffff;
+  --card-bg: #222222;
+  --muted: #888888;
+  --surface-1: #1a1a1a;
+  --surface-2: #0f0f0f;
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:#000000;
+  color:var(--font-color);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  min-height:100vh;
+}
+
+/* wrapper + container: center everything */
+.wrapper {
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 20px;
+}
+
+.container{
+  display:flex;
+  gap:40px;
+  align-items:flex-start;
+  max-width:1100px;
+  width:100%;
+  justify-content:center;
+}
+
+/* ---------- Card Switch (left) ---------- */
+/* Make the switch area centered and compact */
+.card-switch {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  min-width:360px;
+  margin: 0 auto;            /* center horizontally */
+}
+
+/* switch / slider */
+.switch {
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top: 0;
+}
+
+/* slightly larger slider so knob sits nicely */
+.slider {
+  width: 72px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid var(--main-color);
+  background: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+/* knob */
+.slider::before{
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--card-bg);
+  border: 2px solid var(--main-color);
+  box-shadow: 0 3px 0 var(--main-color);
+  transition: transform 0.28s cubic-bezier(.2,.9,.2,1);
+}
+
+/* hidden checkbox input */
+.toggle{
+  position:absolute;
+  width:1px; height:1px;
+  opacity:0; pointer-events:none;
+}
+
+/* move knob on checked */
+.toggle:checked + .slider::before{
+  transform: translateX(36px);
+}
+
+/* ---------- Log in / Sign up labels (fixed alignment) ---------- */
+/* place labels relative to center of slider and vertically above */
+.card-side {
+  position: relative;
+  width:240px;
+  height: 26px;
+  pointer-events: none;
+  display:block;
+}
+
+.card-side::before,
+.card-side::after {
+  position:absolute;
+  top: -34px;                 /* move labels above the slider */
+  width: 100px;
+  text-align:center;
+  font-weight:800;
+  color:var(--font-color);
+  font-size:15px;
+  letter-spacing:0.2px;
+}
+
+/* Left = Login */
+.card-side::before{
+  content: 'Log in';
+  left: calc(50% - 120px);    /* position left of center of card-switch */
+  text-decoration: underline;
+}
+
+/* Right = Sign up */
+.card-side::after{
+  content: 'Sign up';
+  left: calc(50% + 20px);     /* position right of center */
+}
+
+/* ---------- Flip card ---------- */
+.flip-card__inner {
+  width: 340px;
+  height: 380px;
+  transition: transform 0.8s cubic-bezier(.2,.9,.2,1);
+  transform-style: preserve-3d;
+  position: relative;
+  margin-top: 10px;
+  perspective: 1000px;
+}
+
+/* rotate when toggle is checked */
+.toggle:checked ~ .flip-card__inner {
+  transform: rotateY(180deg);
+}
+
+/* faces */
+.flip-card__front, .flip-card__back {
+  width:100%;
+  height:100%;
+  padding: 22px;
+  background: var(--card-bg);
+  box-shadow: 4px 4px var(--main-color);
+  border: 2px solid var(--main-color);
+  border-radius: 12px;
+  position: absolute;
+  backface-visibility: hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap: 18px;
+}
+
+/* back face rotated */
+.flip-card__back{
+  transform: rotateY(180deg);
+}
+
+/* ---------- Form elements ---------- */
+.title{
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--main-color);
+  text-align:center;
+  margin:0;
+}
+
+.flip-card__form {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  width:100%;
+}
+
+/* inputs */
+.flip-card__input{
+  width: 280px;
+  height: 46px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--main-color);
+  background: var(--surface-2);
+  color: var(--font-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 15px;
+  outline:none;
+}
+.flip-card__input::placeholder{ color:var(--muted); }
+.flip-card__input:focus{ border-color:var(--input-focus); box-shadow: 0 0 0 4px rgba(45,140,240,0.06); }
+
+ /* buttons */
+.flip-card__btn{
+  width: 160px;
+  height: 46px;
+  border-radius: 10px;
+  border: 2px solid var(--main-color);
+  background: var(--bg-color);
+  color: var(--font-color);
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow: 4px 4px var(--main-color);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.flip-card__btn:active{ transform: translate(2px,2px); box-shadow:none; }
+
+/* ---------- Home panel (right) ---------- */
+.home-panel {
+  width: 760px;
+  min-height: 420px;
+  padding: 18px;
+  border-radius: 10px;
+  background: #111111;
+  border: 2px solid rgba(255,255,255,0.08);
+  box-shadow: 8px 8px rgba(255,255,255,0.03);
+  color:var(--font-color);
+}
+
+/* header row inside home panel */
+.h-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+/* small buttons inside home */
+.small-btn{
+  padding:8px 12px;
+  border-radius:8px;
+  background:#222;
+  border:1px solid #444;
+  color:var(--font-color);
+  cursor:pointer;
+}
+
+/* list / items */
+.list{ list-style:none; padding:0; margin:0; }
+.item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border-radius:8px;
+  background:var(--surface-1);
+  border:1px solid #333;
+  margin-bottom:10px;
+}
+
+/* utility */
+.center { display:flex; align-items:center; justify-content:center; }
+.small { font-size:13px; color:var(--font-color-sub); }
+
+/* Responsive adjustments */
+@media (max-width: 920px) {
+  .container { flex-direction:column; gap:20px; padding: 20px; }
+  .card-switch { min-width: 320px; }
+  .flip-card__inner { width: 300px; height: 340px; }
+  .flip-card__input { width: 260px; }
+  .card-side::before { left: calc(50% - 115px); }
+  .card-side::after { left: calc(50% + 15px); }
+}

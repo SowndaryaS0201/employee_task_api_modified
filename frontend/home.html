@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Employee & Task Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* small tweaks specifically for home.html */
+    .topbar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: #111;
+      border-bottom: 2px solid #222;
+      position: fixed;
+      top: 0;
+      left: 0;
+      color: white;
+    }
+
+    .logout-btn {
+      padding: 10px 16px;
+      background: #222;
+      border: 1px solid #555;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .main-content {
+      margin-top: 80px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      width: 820px;
+      padding: 20px;
+      background: #111;
+      border: 2px solid #222;
+      border-radius: 10px;
+      box-shadow: 8px 8px rgba(255,255,255,0.03);
+      color: white;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+    }
+
+    .btn {
+      padding: 12px 16px;
+      width: 260px;
+      background: #1a1a1a;
+      border: 1px solid #555;
+      color: white;
+      border-radius: 8px;
+      text-align: left;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      background: #222;
+    }
+
+    .output-box {
+      margin-top: 20px;
+      padding: 14px;
+      background: #000;
+      border: 1px solid #444;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      min-height: 80px;
+      max-height: 360px;
+      overflow-y: auto;
+      color: #e6e6e6;
+    }
+
+    .small { font-size: 13px; color: #bbb; }
+    .muted { color: #888; font-size: 13px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV BAR -->
+  <div class="topbar">
+    <h2>Employee & Task Portal</h2>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="card">
+
+      <h2 class="section-title">Employee Management</h2>
+
+      <button class="btn" onclick="listEmployees()">📄 List Employees</button>
+      <button class="btn" onclick="createEmployee()">➕ Create Employee</button>
+      <button class="btn" onclick="updateEmployee()">✏️ Update Employee</button>
+      <button class="btn" onclick="deleteEmployee()">🗑 Delete Employee</button>
+
+      <h2 class="section-title">Tasks Management</h2>
+
+      <button class="btn" onclick="listTasks()">📄 List Tasks</button>
+      <button class="btn" onclick="createTask()">➕ Create Task</button>
+      <button class="btn" onclick="updateTask()">✏️ Update Task</button>
+      <button class="btn" onclick="deleteTask()">🗑 Delete Task</button>
+
+      <div id="output" class="output-box">Output will appear here…</div>
+      <div class="muted">Tip: Click a button and see readable results here. Use small IDs when prompted (e.g. employee id = 1).</div>
+
+    </div>
+  </div>
+
+<script>
+  const API = "http://127.0.0.1:8000";
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Not authorized. Please login again.");
+    window.location.href = "index.html";
+  }
+
+  // ---------------- Helper: parse response (json or text) ----------------
+  async function parseResponse(res) {
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      return await res.json();
+    }
+    // fallback to text (could be empty)
+    return await res.text();
+  }
+
+  // ---------------- Formatters ----------------
+  function formatItem(obj) {
+    // pretty single-object formatter
+    if (!obj || typeof obj !== "object") return String(obj);
+    // prefer specific formatting for employees/tasks if keys exist
+    if ("first_name" in obj && "last_name" in obj) {
+      return `Employee #${obj.id ?? "-"}\n` +
+             `Name     : ${obj.first_name} ${obj.last_name}\n` +
+             `Email    : ${obj.email ?? "-"}\n` +
+             `Position : ${obj.position ?? "-"}\n` +
+             `Department: ${obj.department ?? "-"}\n` +
+             `Tasks    : ${obj.task_count ?? (obj.tasks ? obj.tasks.length : 0)}\n` +
+             `Created  : ${obj.created_at ?? "-"}\n`;
+    }
+    if ("title" in obj && "status" in obj) {
+      return `Task #${obj.id ?? "-"}\n` +
+             `Title    : ${obj.title}\n` +
+             `Status   : ${obj.status}\n` +
+             `Priority : ${obj.priority ?? "-"}\n` +
+             `Assigned : ${obj.employee_id ?? "—"}\n` +
+             `Due Date : ${obj.due_date ?? "-"}\n` +
+             `Created  : ${obj.created_at ?? "-"}\n`;
+    }
+
+    // generic object formatter
+    let lines = [];
+    for (let k of Object.keys(obj)) {
+      lines.push(`${k} : ${obj[k]}`);
+    }
+    return lines.join("\n");
+  }
+
+  function formatArray(arr) {
+    if (!Array.isArray(arr)) return formatItem(arr);
+    if (arr.length === 0) return "(empty list)";
+    // If array of employees or tasks, map using formatItem and separate
+    return arr.map((it, idx) => `---- item ${idx+1} ----\n${formatItem(it)}`).join("\n\n");
+  }
+
+  // ---------------- Central show() ----------------
+  function show(output) {
+    const box = document.getElementById("output");
+    if (Array.isArray(output)) {
+      box.textContent = formatArray(output);
+    } else if (typeof output === "object" && output !== null) {
+      box.textContent = formatItem(output);
+    } else {
+      box.textContent = String(output);
+    }
+  }
+
+  function showError(status, payload) {
+    const box = document.getElementById("output");
+    box.textContent = `ERROR (${status})\n\n${typeof payload === "string" ? payload : JSON.stringify(payload, null, 2)}`;
+  }
+
+  // ---------------- Logout ----------------
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "index.html";
+  }
+
+  // ----------------- EMPLOYEE FUNCTIONS -----------------
+  async function listEmployees() {
+    try {
+      const res = await fetch(`${API}/employees/`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function createEmployee() {
+    try {
+      const fn = prompt("First name:");
+      if (fn === null) return;
+      const ln = prompt("Last name:");
+      if (ln === null) return;
+      const email = prompt("Email:");
+      if (email === null) return;
+      const pos = prompt("Position:");
+      if (pos === null) return;
+      const dept = prompt("Department:");
+      if (dept === null) return;
+
+      const body = {
+        first_name: fn,
+        last_name: ln,
+        email,
+        position: pos,
+        department: dept,
+        is_active: true
+      };
+
+      const res = await fetch(`${API}/employees/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function updateEmployee() {
+    try {
+      const id = prompt("Employee ID to update:");
+      if (!id) return;
+      const pos = prompt("New Position (leave blank to skip):");
+      const dept = prompt("New Department (leave blank to skip):");
+
+      const body = {};
+      if (pos) body.position = pos;
+      if (dept) body.department = dept;
+
+      const res = await fetch(`${API}/employees/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function deleteEmployee() {
+    try {
+      const id = prompt("Employee ID to delete:");
+      if (!id) return;
+
+      const res = await fetch(`${API}/employees/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      // If success it might return { "detail": "Deleted" } or 204 no content
+      show(data || `Employee ${id} deleted`);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  // ----------------- TASK FUNCTIONS -----------------
+  async function listTasks() {
+    try {
+      const res = await fetch(`${API}/tasks/`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function createTask() {
+    try {
+      const title = prompt("Task Title:");
+      if (title === null) return;
+      const desc = prompt("Description:");
+      if (desc === null) return;
+      const status = prompt("Status (todo / in_progress / done):", "todo");
+      if (status === null) return;
+      const priorityStr = prompt("Priority (1-5):", "3");
+      if (priorityStr === null) return;
+      const priority = Number(priorityStr) || 3;
+      const due = prompt("Due Date (YYYY-MM-DD) (optional):", "");
+      if (due === null) return;
+      const eidStr = prompt("Employee ID to assign (leave empty for unassigned):", "");
+      if (eidStr === null) return;
+      const eid = eidStr === "" ? null : Number(eidStr);
+
+      const body = {
+        title,
+        description: desc,
+        status,
+        priority,
+        due_date: due || null,
+        employee_id: eid
+      };
+
+      const res = await fetch(`${API}/tasks/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function updateTask() {
+    try {
+      const id = prompt("Task ID to update:");
+      if (!id) return;
+      const status = prompt("New status (todo / in_progress / done):", "");
+      const priorityStr = prompt("New priority (1-5) (leave blank to skip):", "");
+      const body = {};
+      if (status) body.status = status;
+      if (priorityStr) body.priority = Number(priorityStr);
+
+      const res = await fetch(`${API}/tasks/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+  async function deleteTask() {
+    try {
+      const id = prompt("Task ID to delete:");
+      if (!id) return;
+
+      const res = await fetch(`${API}/tasks/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      const data = await parseResponse(res);
+      if (!res.ok) return showError(res.status, data);
+      show(data || `Task ${id} deleted`);
+    } catch (err) {
+      showError("NETWORK", err.message || err);
+    }
+  }
+
+</script>
+
+</body>
+</html>
+>
